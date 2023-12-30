@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">FriendsNetwork</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="enter_your_word">Phone Number</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="don_t_have_an_account">Don\'t have an account?</string>
+    <string name="sign_up">Sign up</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="mobile_no_username">Mobile No./Username</string>
+    <string name="sign_in">Sign In</string>
+    <string name="user_name">user_name</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="password">Password</string>
+    <string name="email">Email</string>
+    <string name="or_connect_with">or connect with</string>
+    <string name="enter_your_otp">Enter Your OTP</string>
+    <string name="otp_msg">OTP has been sent to your e-mail address, please enter\nthe OTP to verify the email</string>
+    <string name="caption">Caption</string>
+
+</resources>

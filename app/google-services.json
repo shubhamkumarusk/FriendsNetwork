@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "400648955212",
+    "project_id": "friendsnetwork-fa61a",
+    "storage_bucket": "friendsnetwork-fa61a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:400648955212:android:b722c5df4962447c931be9",
+        "android_client_info": {
+          "package_name": "com.example.friendsnetwork"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "400648955212-cfp03cka59cbtnpkur5qfl4un5pm83fq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.friendsnetwork",
+            "certificate_hash": "6ca902dad4f962db8b52851ece40ff0ccff7c5ca"
+          }
+        },
+        {
+          "client_id": "400648955212-08rsi1hmts0la91vdcqnk685n61qs4co.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-45mI6Ii-Nl4NO6ODlUnv69UbfHlRzG0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "400648955212-08rsi1hmts0la91vdcqnk685n61qs4co.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

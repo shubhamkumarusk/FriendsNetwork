@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/signup_background"
+    tools:context=".fragements.LoginPage">
+
+    <TextView
+        android:id="@+id/signup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        style="@style/LoginStyle"/>
+
+    <EditText
+        android:id="@+id/email_id_et"
+
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp"
+        android:paddingStart="10dp"
+        android:inputType="textEmailAddress"
+        android:hint="@string/email"
+        android:drawableStart="@drawable/baseline_email_24"
+        android:background="@drawable/edit_text_background"
+        app:layout_constraintTop_toBottomOf="@+id/signup"/>
+
+    <EditText
+        android:id="@+id/set_password_et"
+
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp"
+        android:paddingStart="10dp"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:drawableStart="@drawable/icons8_password_50"
+        android:background="@drawable/edit_text_background"
+        app:layout_constraintTop_toBottomOf="@+id/email_id_et" />
+
+    <EditText
+        android:id="@+id/confirm_password_et"
+        android:layout_width="0dp"
+        android:layout_height="45dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="20dp"
+        android:paddingStart="10dp"
+        android:inputType="textPassword"
+        android:hint="@string/confirm_password"
+        android:drawableStart="@drawable/icons8_password_50"
+        android:background="@drawable/edit_text_background"
+        app:layout_constraintTop_toBottomOf="@+id/set_password_et"/>
+
+
+
+
+
+    <TextView
+        android:id="@+id/already"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/already_have_an_account"
+        app:layout_constraintStart_toStartOf="@id/confirm_password_et"
+        style="@style/textviewSignin"
+        app:layout_constraintTop_toBottomOf="@id/confirm_password_et"
+        />
+
+    <TextView
+        android:id="@+id/alreadySignin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/sign_in"
+        app:layout_constraintStart_toEndOf="@id/already"
+        style="@style/textviewSignin"
+        app:layout_constraintTop_toBottomOf="@id/confirm_password_et"
+        android:textColor="#408D97"
+        />
+
+
+    <Button
+        android:id="@+id/verification_btn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="Send OTP"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_margin="@dimen/default_margin"
+        android:background="@drawable/button_background"
+        app:layout_constraintTop_toBottomOf="@id/alreadySignin"
+        />
+    <View
+        android:id="@+id/viewline_left"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@color/black"
+        app:layout_constraintStart_toStartOf="@id/verification_btn"
+        app:layout_constraintTop_toBottomOf="@id/verification_btn"
+        app:layout_constraintEnd_toStartOf="@id/connecttextview"
+        android:layout_marginTop="20dp"/>
+    <TextView
+        android:id="@+id/connecttextview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/or_connect_with"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:layout_margin="10dp"
+        app:layout_constraintStart_toEndOf="@id/viewline_left"
+        app:layout_constraintEnd_toStartOf="@id/viewline_right"
+        app:layout_constraintTop_toBottomOf="@id/verification_btn"/>
+    <View
+        android:id="@+id/viewline_right"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:background="@color/black"
+        app:layout_constraintEnd_toEndOf="@id/verification_btn"
+        app:layout_constraintTop_toBottomOf="@id/verification_btn"
+        app:layout_constraintStart_toEndOf="@id/connecttextview"
+        android:layout_marginTop="20dp"/>
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/googleSignInButton"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/googlelogo"
+        app:civ_border_color="@color/black"
+        android:layout_margin="10dp"
+        app:layout_constraintTop_toBottomOf="@id/connecttextview"
+        app:layout_constraintStart_toStartOf="@id/connecttextview"
+        app:layout_constraintEnd_toEndOf="@id/connecttextview"/>
+
+
+
+
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

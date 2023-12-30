@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginPage">
+
+    <fragment
+        android:id="@+id/loginPage"
+        android:name="com.example.friendsnetwork.fragements.LoginPage"
+        android:label="fragment_login_page"
+        tools:layout="@layout/fragment_login_page" >
+        <action
+            android:id="@+id/action_loginPage_to_homePage"
+            app:destination="@id/homePage"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/loginPage"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_loginPage_to_signInPage"
+            app:destination="@id/signInPage" />
+        <action
+            android:id="@+id/action_loginPage_to_OTPFragment"
+            app:destination="@id/OTPFragment" />
+        <action
+            android:id="@+id/action_loginPage_to_profileSetUpFragment"
+            app:destination="@id/profileSetUpFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/homePage"
+        android:name="com.example.friendsnetwork.fragements.HomePage"
+        android:label="fragment_home_page"
+        tools:layout="@layout/fragment_home_page" >
+        <action
+            android:id="@+id/action_homePage_to_feedFragment"
+            app:destination="@id/feedFragment" />
+        <action
+            android:id="@+id/action_homePage_to_uploadFragment"
+            app:destination="@id/uploadFragment" />
+        <action
+            android:id="@+id/action_homePage_to_profileFragment"
+            app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_homePage_to_settingFragment"
+            app:destination="@id/settingFragment" />
+        <action
+            android:id="@+id/action_homePage_to_loginPage"
+            app:destination="@id/loginPage" />
+    </fragment>
+    <fragment
+        android:id="@+id/feedFragment"
+        android:name="com.example.friendsnetwork.fragements.FeedFragment"
+        android:label="fragment_feed"
+        tools:layout="@layout/fragment_feed" >
+        <action
+            android:id="@+id/action_feedFragment_to_loginPage"
+            app:destination="@id/loginPage" />
+    </fragment>
+    <fragment
+        android:id="@+id/settingFragment"
+        android:name="com.example.friendsnetwork.fragements.SettingFragment"
+        android:label="fragment_setting"
+        tools:layout="@layout/fragment_setting" />
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.friendsnetwork.fragements.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" />
+    <fragment
+        android:id="@+id/uploadFragment"
+        android:name="com.example.friendsnetwork.fragements.UploadFragment"
+        android:label="fragment_upload"
+        tools:layout="@layout/fragment_upload" />
+    <fragment
+        android:id="@+id/signInPage"
+        android:name="com.example.friendsnetwork.fragements.SignInPage"
+        android:label="fragment_sign_in_page"
+        tools:layout="@layout/fragment_sign_in_page" >
+        <action
+            android:id="@+id/action_signInPage_to_homePage"
+            app:destination="@id/homePage" />
+        <action
+            android:id="@+id/action_signInPage_to_loginPage"
+            app:destination="@id/loginPage" />
+    </fragment>
+    <fragment
+        android:id="@+id/OTPFragment"
+        android:name="com.example.friendsnetwork.fragements.OTPFragment"
+        android:label="fragment_o_t_p"
+        tools:layout="@layout/fragment_o_t_p" >
+        <argument
+            android:name="email"
+            app:argType="string" />
+        <argument
+            android:name="password"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_OTPFragment_to_profileSetUpFragment"
+            app:destination="@id/profileSetUpFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/profileSetUpFragment"
+        android:name="com.example.friendsnetwork.fragements.ProfileSetUpFragment"
+        android:label="fragment_profile_set_up"
+        tools:layout="@layout/fragment_profile_set_up" >
+        <action
+            android:id="@+id/action_profileSetUpFragment_to_homePage"
+            app:destination="@id/homePage" />
+    </fragment>
+</navigation>

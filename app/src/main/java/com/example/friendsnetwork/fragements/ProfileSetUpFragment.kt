@@ -10,11 +10,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
 import com.example.friendsnetwork.databinding.FragmentProfileSetUpBinding
 import com.example.friendsnetwork.model.UserModel
+import com.example.friendsnetwork.viewmodel.FriendsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -27,6 +29,7 @@ class ProfileSetUpFragment : Fragment() {
     private lateinit var firebaseReference: FirebaseFirestore
     private lateinit var storageRef: StorageReference
     private  var mImageUri: Uri?=null
+    val viewModel:FriendsViewModel by activityViewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -65,10 +68,11 @@ class ProfileSetUpFragment : Fragment() {
                 storageRef.putFile(it).addOnCompleteListener {
                     if (it.isSuccessful) {
                         storageRef.downloadUrl.addOnSuccessListener { uri ->
-                            val user = UserModel(curruser.uid, name, uri.toString(), caption)
-                            firebaseReference.collection(USER_ID_FIRESTOREPATH).document(curruser.uid).set(user)
+                            val user = UserModel(curruser.email!!, name, uri.toString(), caption,true)
+                            firebaseReference.collection(USER_ID_FIRESTOREPATH).document(curruser.email!!).set(user)
                                 .addOnCompleteListener {
                                     if(it.isSuccessful){
+
                                         findNavController().navigate(R.id.action_profileSetUpFragment_to_homePage)
                                     }
                                     else{
@@ -100,7 +104,6 @@ class ProfileSetUpFragment : Fragment() {
         startActivityForResult(galleryIntent,1)
 
     }
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null) {
@@ -108,5 +111,7 @@ class ProfileSetUpFragment : Fragment() {
             binding.profilePic.setImageURI(mImageUri)
         }
     }
+
+
 
 }

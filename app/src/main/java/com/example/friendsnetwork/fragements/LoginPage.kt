@@ -9,9 +9,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.friendsnetwork.R
+import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
 import com.example.friendsnetwork.databinding.FragmentLoginPageBinding
+import com.example.friendsnetwork.model.UserModel
+import com.example.friendsnetwork.viewmodel.FriendsViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -22,6 +27,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 
@@ -30,7 +42,9 @@ class LoginPage : Fragment() {
     private lateinit var binding:FragmentLoginPageBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var firebaseReference: FirebaseFirestore
     private val RC_SIGN_IN = 9001
+    private val viewModel:FriendsViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,33 +88,72 @@ class LoginPage : Fragment() {
             val email = binding.emailIdEt.text.toString().trim()
             val pass = binding.setPasswordEt.text.toString().trim()
             val confirmPass = binding.confirmPasswordEt.text.toString().trim()
-            if(email.isEmpty()){
+
+            if (email.isEmpty()) {
                 binding.emailIdEt.error = "Enter Your e-mail"
+                return@setOnClickListener
             }
-            if(pass.isEmpty()){
+            if (pass.isEmpty()) {
                 binding.setPasswordEt.error = "Enter Your Password"
+                return@setOnClickListener
             }
-            if(confirmPass.isEmpty()){
+            if (confirmPass.isEmpty()) {
                 binding.confirmPasswordEt.error = "Confirm Your Password"
+                return@setOnClickListener
             }
-            if(confirmPass!=pass){
-                binding.confirmPasswordEt.error  = "Enter same password to confirm"
+            if (confirmPass != pass) {
+                binding.confirmPasswordEt.error = "Enter the same password to confirm"
+                return@setOnClickListener
             }
 
-            if(email.isNotEmpty()&& pass.isNotEmpty() && confirmPass.isNotEmpty()){
-                if(pass==confirmPass){
-                    val action = LoginPageDirections.actionLoginPageToOTPFragment(email,pass)
-                    findNavController().navigate(action)
+            if (email.isNotEmpty() && pass.isNotEmpty() && confirmPass.isNotEmpty() && pass == confirmPass) {
+                val userDocumentRef = firebaseReference.collection(USER_ID_FIRESTOREPATH).document(email)
+
+                userDocumentRef.get().addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val doc = task.result
+
+                        if (doc != null && doc.exists()) {
+                            showToast("User already exists")
+                        } else {
+                            // User doesn't exist, navigate to OTPFragment
+                            findNavController().navigate(R.id.action_loginPage_to_OTPFragment)
+                        }
+                    } else {
+                        showToast("Error: ${task.exception?.message}")
+                    }
                 }
             }
 
         }
     }
 
+
     private fun init(view: View) {
         auth = FirebaseAuth.getInstance()
-        if(auth.currentUser!=null){
-            findNavController().navigate(R.id.action_loginPage_to_homePage)
+        firebaseReference = FirebaseFirestore.getInstance()
+        binding.progressBar.visibility = View.GONE
+        binding.viewBackground.visibility = View.GONE
+        if(auth.currentUser!=null) {
+            lifecycleScope.launch {
+                binding.progressBar.visibility = View.VISIBLE
+                binding.viewBackground.visibility = View.VISIBLE
+                binding.verificationBtn.visibility = View.GONE
+                val user = withContext(Dispatchers.IO) {
+                    getUserModelFromFirestore(auth.currentUser!!.email!!)
+                }
+
+                if (user == null) {
+                    findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                } else if (!user.profileSetup) {
+                    findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                } else {
+                    findNavController().navigate(R.id.action_loginPage_to_homePage)
+                }
+                binding.progressBar.visibility = View.GONE
+                binding.viewBackground.visibility = View.GONE
+                binding.verificationBtn.visibility = View.VISIBLE
+            }
         }
         //Changing Color of icons according to theme
         val isDarkTheme = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
@@ -118,6 +171,14 @@ class LoginPage : Fragment() {
 
 
 
+    }
+    private suspend fun getUserModelFromFirestore(userId: String): UserModel? {
+        return try {
+            firebaseReference.collection(USER_ID_FIRESTOREPATH).document(userId)
+                .get().await().toObject(UserModel::class.java)
+        } catch (e: Exception) {
+            null
+        }
     }
     private fun initGoogleSignIn(view: View) {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -159,8 +220,29 @@ class LoginPage : Fragment() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
-                    // Sign-in success, navigate to the next screen or perform other actions
-                    findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                    //Checking if user already have account!!
+                    val newUser = task.result!!.additionalUserInfo!!.isNewUser
+                    if(newUser){
+                        findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                    }
+                    else{
+                        lifecycleScope.launch {
+                            val user = withContext(Dispatchers.IO) {
+                                getUserModelFromFirestore(auth.currentUser!!.email!!)
+                            }
+
+                            if (user == null) {
+                                findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                            } else if (!user.profileSetup) {
+                                findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
+                            } else {
+                                findNavController().navigate(R.id.action_loginPage_to_homePage)
+                            }
+                        }
+                    }
+
+
+
                 } else {
                     // If sign-in fails, display a message to the user.
                     Toast.makeText(
@@ -170,6 +252,10 @@ class LoginPage : Fragment() {
                     ).show()
                 }
             }
+    }
+
+    private fun showToast(message:String){
+        Toast.makeText(requireContext(),message,Toast.LENGTH_LONG).show()
     }
 
 

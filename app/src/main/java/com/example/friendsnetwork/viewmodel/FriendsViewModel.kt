@@ -25,10 +25,12 @@ class FriendsViewModel:ViewModel() {
     private var mfirebaseReference = FirebaseFirestore.getInstance()
 
 
+
     fun setSelectedMenuId(id:Fragment){
         mSelectedMenuId.postValue(id)
 
     }
+
     init {
         showFeeds()
         showPersonalFeed()
@@ -51,7 +53,7 @@ class FriendsViewModel:ViewModel() {
                         val image = Uri.parse(document.getString("image")!!)
                         val caption = document.getString("caption")!!
 
-                        val user = getUserModelFromFirestore(userId)
+                        val user = getUserModelFromFirestore(mauth.currentUser!!.email!!)
                         Log.d("UserDetails", user.toString())
                         val feed = FeedModel(userId, image, caption, userModel = user)
                         FeedList.add(feed)
@@ -59,7 +61,6 @@ class FriendsViewModel:ViewModel() {
                     }
                     mFeedList.postValue(FeedList)
                 }
-                    // Ensure the fragment is still attached before updating the UI
 
 
 

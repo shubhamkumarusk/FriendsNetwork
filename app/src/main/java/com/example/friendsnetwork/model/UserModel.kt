@@ -9,6 +9,7 @@ data class UserModel(
     val id:String="",
     val name:String="",
     val userImage:String="",
-    val caption:String=""
+    val caption:String="",
+    val profileSetup:Boolean = false
 )
 

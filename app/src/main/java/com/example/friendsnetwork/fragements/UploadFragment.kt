@@ -74,7 +74,7 @@ class UploadFragment : Fragment() {
                     storageRef.downloadUrl.addOnSuccessListener { uri ->
                         GlobalScope.launch(Dispatchers.Main) { // Switch to the main thread
                             try {
-                                val user = getUserModelFromFirestore(currentUser.uid)
+                                val user = getUserModelFromFirestore(currentUser.email!!)
                                 user?.let { userModel ->
                                     val feed = FeedModel(currentUser.uid, uri, caption, userModel = userModel)
                                     uploadFeedToFirestore(currentUser.uid, feed, "All")

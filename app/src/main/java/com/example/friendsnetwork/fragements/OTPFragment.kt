@@ -96,7 +96,6 @@ class OTPFragment : Fragment() {
             // Set the alternative drawable for dark theme
             binding.imgOtp.setImageResource(R.drawable.password_svgrepo_com_night)
 
-
         }
         email = args.email
         password = args.password

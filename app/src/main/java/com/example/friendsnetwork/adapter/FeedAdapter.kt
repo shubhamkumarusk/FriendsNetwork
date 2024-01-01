@@ -30,16 +30,13 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
             val userModel = feed.userModel
             if (userModel != null) {
                 binding.username.text = userModel.name
-
                 Glide.with(itemView.context)
                     .load(Uri.parse(userModel.userImage))
                     .centerCrop()
                     .placeholder(R.color.black)
                     .into(binding.dpImage)
 
-                // Other bindings...
-            } else {
-                // Handle the case where userModel is null
+
             }
             binding.likeNum.text = feed.liked_by.size.toString()
             binding.captionFeed.text = feed.caption

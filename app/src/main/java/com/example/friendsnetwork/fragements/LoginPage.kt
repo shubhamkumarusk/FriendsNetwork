@@ -1,5 +1,6 @@
 package com.example.friendsnetwork.fragements
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
@@ -14,6 +15,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
+import com.example.friendsnetwork.buildDialog
 import com.example.friendsnetwork.databinding.FragmentLoginPageBinding
 import com.example.friendsnetwork.model.UserModel
 import com.example.friendsnetwork.viewmodel.FriendsViewModel
@@ -45,6 +47,7 @@ class LoginPage : Fragment() {
     private lateinit var firebaseReference: FirebaseFirestore
     private val RC_SIGN_IN = 9001
     private val viewModel:FriendsViewModel by activityViewModels()
+    private lateinit var dialog: ProgressDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,7 +91,7 @@ class LoginPage : Fragment() {
             val email = binding.emailIdEt.text.toString().trim()
             val pass = binding.setPasswordEt.text.toString().trim()
             val confirmPass = binding.confirmPasswordEt.text.toString().trim()
-
+            dialog.show()
             if (email.isEmpty()) {
                 binding.emailIdEt.error = "Enter Your e-mail"
                 return@setOnClickListener
@@ -114,12 +117,17 @@ class LoginPage : Fragment() {
                         val doc = task.result
 
                         if (doc != null && doc.exists()) {
+                            dialog.dismiss()
                             showToast("User already exists")
+
                         } else {
                             // User doesn't exist, navigate to OTPFragment
-                            findNavController().navigate(R.id.action_loginPage_to_OTPFragment)
+                            dialog.dismiss()
+                            val action = LoginPageDirections.actionLoginPageToOTPFragment(email, pass)
+                            findNavController().navigate(action)
                         }
                     } else {
+                        dialog.dismiss()
                         showToast("Error: ${task.exception?.message}")
                     }
                 }
@@ -142,7 +150,6 @@ class LoginPage : Fragment() {
                 val user = withContext(Dispatchers.IO) {
                     getUserModelFromFirestore(auth.currentUser!!.email!!)
                 }
-
                 if (user == null) {
                     findNavController().navigate(R.id.action_loginPage_to_profileSetUpFragment)
                 } else if (!user.profileSetup) {
@@ -166,6 +173,7 @@ class LoginPage : Fragment() {
             binding.confirmPasswordEt.setCompoundDrawablesWithIntrinsicBounds(R.drawable.icons8_password_50_night,0,0,0)
 
         }
+        dialog = buildDialog(requireContext(),"Sending OTP")
         initGoogleSignIn(view)
 
 

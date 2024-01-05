@@ -63,6 +63,10 @@ class FeedFragment : Fragment() {
             mAdapter.submitList(it)
         })
 
+        viewModel.mUser.observe(viewLifecycleOwner){
+            viewModel.refresh()
+        }
+
         if(auth.currentUser==null){
             findNavController().navigate(R.id.action_feedFragment_to_loginPage)
         }

@@ -77,8 +77,8 @@ class UploadFragment : Fragment() {
                                 val user = getUserModelFromFirestore(currentUser.email!!)
                                 user?.let { userModel ->
                                     val feed = FeedModel(currentUser.uid, uri, caption, userModel = userModel)
-                                    uploadFeedToFirestore(currentUser.uid, feed, "All")
-                                    uploadFeedToFirestore(currentUser.uid, feed, currentUser.uid)
+                                    uploadFeedToFirestore(currentUser.email!!, feed, "All")
+                                    uploadFeedToFirestore(currentUser.email!!, feed, currentUser.email!!)
                                     Toast.makeText(requireContext(), "Uploaded", Toast.LENGTH_LONG).show()
                                 } ?: run {
                                     Toast.makeText(requireContext(), "User not found", Toast.LENGTH_LONG).show()

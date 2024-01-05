@@ -1,19 +1,25 @@
 package com.example.friendsnetwork.fragements
 
+import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
+import com.example.friendsnetwork.buildDialog
 import com.example.friendsnetwork.databinding.FragmentProfileSetUpBinding
 import com.example.friendsnetwork.model.UserModel
 import com.example.friendsnetwork.viewmodel.FriendsViewModel
@@ -29,7 +35,11 @@ class ProfileSetUpFragment : Fragment() {
     private lateinit var firebaseReference: FirebaseFirestore
     private lateinit var storageRef: StorageReference
     private  var mImageUri: Uri?=null
+    private var mUser:UserModel?=null
     val viewModel:FriendsViewModel by activityViewModels()
+    private lateinit var dialog: ProgressDialog
+    private  var isProfilePicChanged:Boolean = false
+    var message = "Creating Profile"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -47,9 +57,10 @@ class ProfileSetUpFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         init(view)
-        binding.continueProfile.setOnClickListener{
-            AddUsers()
-        }
+
+            binding.continueProfile.setOnClickListener {
+                AddUsers()
+            }
         binding.updateDp.setOnClickListener {
             openGallery()
         }
@@ -62,35 +73,62 @@ class ProfileSetUpFragment : Fragment() {
         if(name.isEmpty()){
             binding.userNameProfile.error = "Enter Your name please!!"
         }
+        dialog.show()
         if(name.isNotEmpty()) {
             storageRef = storageRef.child(curruser.uid)
-            mImageUri?.let {
-                storageRef.putFile(it).addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        storageRef.downloadUrl.addOnSuccessListener { uri ->
-                            val user = UserModel(curruser.email!!, name, uri.toString(), caption,true)
-                            firebaseReference.collection(USER_ID_FIRESTOREPATH).document(curruser.email!!).set(user)
-                                .addOnCompleteListener {
-                                    if(it.isSuccessful){
+               if(mImageUri!=null && isProfilePicChanged) {
+                   mImageUri?.let {
+                       storageRef.putFile(it).addOnCompleteListener {
+                           if (it.isSuccessful) {
+                               storageRef.downloadUrl.addOnSuccessListener { uri ->
+                                   val user = UserModel(
+                                       curruser.email!!,
+                                       name,
+                                       uri.toString(),
+                                       caption,
+                                       true
+                                   )
+                                   viewModel.mUser.postValue(user)
+                                   firebaseReference.collection(USER_ID_FIRESTOREPATH)
+                                       .document(curruser.email!!).set(user)
+                                       .addOnCompleteListener {
+                                           if (it.isSuccessful) {
+                                               dialog.dismiss()
+                                               findNavController().navigate(R.id.action_profileSetUpFragment_to_homePage)
+                                           } else {
+                                               dialog.dismiss()
 
-                                        findNavController().navigate(R.id.action_profileSetUpFragment_to_homePage)
-                                    }
-                                    else{
+                                           }
+                                       }
+                               }
+                           } else {
+                               dialog.dismiss()
+                               Toast.makeText(
+                                   requireContext(),
+                                   "Failed To create Account+${it.exception}",
+                                   Toast.LENGTH_LONG
+                               ).show()
+                           }
+                       }
+                   }
+               }
+            else{
+                val user = UserModel(curruser.email!!,name,mImageUri.toString(),caption,true)
+                   viewModel.mUser.postValue(user)
+                   firebaseReference.collection(USER_ID_FIRESTOREPATH)
+                       .document(curruser.email!!).set(user)
+                       .addOnCompleteListener {
+                           if (it.isSuccessful) {
+                               dialog.dismiss()
+                               findNavController().navigate(R.id.action_profileSetUpFragment_to_homePage)
+                           } else {
+                               dialog.dismiss()
 
-                                    }
-                                }
-                        }
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed To create Account+${it.exception}",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
+                           }
+                       }
+               }
+
             }
-        }
-
 
     }
 
@@ -98,6 +136,14 @@ class ProfileSetUpFragment : Fragment() {
         auth = FirebaseAuth.getInstance()
         firebaseReference = FirebaseFirestore.getInstance()
         storageRef = FirebaseStorage.getInstance().reference.child("UserDP")
+
+        viewModel.mUser.observe(viewLifecycleOwner){
+            if(it!=null){
+                updateProfile(it,view)
+                message = "Updating Profile"
+            }
+        }
+        dialog = buildDialog(requireContext(), message)
     }
     private fun openGallery(){
         val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -109,8 +155,21 @@ class ProfileSetUpFragment : Fragment() {
         if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null) {
             mImageUri = data.data
             binding.profilePic.setImageURI(mImageUri)
+            isProfilePicChanged = true
         }
     }
+    private fun updateProfile(user: UserModel, view: View){
+        Glide.with(view)
+            .load(user.userImage)
+            .placeholder(R.drawable.profile)
+            .into(binding.profilePic)
+
+        mImageUri = Uri.parse(user.userImage)
+        Log.d("ImageUri",mImageUri.toString())
+        binding.userNameProfile.setText(user.name)
+        binding.Caption.setText(user.caption)
+    }
+
 
 
 

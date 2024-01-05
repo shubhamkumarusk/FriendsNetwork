@@ -27,6 +27,7 @@ class ProfileAdapter: ListAdapter<FeedModel, ProfileAdapter.ProfileViewHolder>(D
                     .error(R.drawable.connection_error)
                     .into(binding.feedImage)
             }
+
         }
 
 
@@ -40,7 +41,6 @@ class ProfileAdapter: ListAdapter<FeedModel, ProfileAdapter.ProfileViewHolder>(D
             override fun areItemsTheSame(oldItem: FeedModel, newItem: FeedModel): Boolean {
                 return oldItem.userId==newItem.userId
             }
-
 
             override fun areContentsTheSame(oldItem: FeedModel, newItem: FeedModel): Boolean {
                 return oldItem==newItem

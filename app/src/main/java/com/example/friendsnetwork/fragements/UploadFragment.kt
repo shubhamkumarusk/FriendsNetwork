@@ -1,18 +1,27 @@
 package com.example.friendsnetwork.fragements
 
 import android.app.Activity
+import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.provider.MediaStore.Images.Media
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
+import com.example.friendsnetwork.buildDialog
 import com.example.friendsnetwork.databinding.FragmentUploadBinding
 import com.example.friendsnetwork.model.FeedModel
 import com.example.friendsnetwork.model.UserModel
@@ -24,6 +33,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class UploadFragment : Fragment() {
@@ -33,6 +48,18 @@ class UploadFragment : Fragment() {
     private lateinit var firebaseReference: FirebaseFirestore
     private lateinit var auth :FirebaseAuth
     private var mImageUri:Uri?=null
+    private lateinit var mCameraUri: Uri
+    private lateinit var dialog:ProgressDialog
+    private  var currentPhotoPath: String?=null
+    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (success) {
+            Log.d("shubhamkumar", mImageUri.toString())
+            binding.image.setImageURI(mImageUri)
+        } else {
+            // Handle failure
+            Toast.makeText(requireActivity(), "Failed to capture image", Toast.LENGTH_LONG).show()
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -55,8 +82,11 @@ class UploadFragment : Fragment() {
     }
 
     private fun registerActivity() {
-        binding.image.setOnClickListener {
+        binding.gallery.setOnClickListener {
             openGallery()
+        }
+        binding.camera.setOnClickListener{
+            openCamera()
         }
         binding.uploadBtn.setOnClickListener {
             UploadFeed()
@@ -67,9 +97,16 @@ class UploadFragment : Fragment() {
         val currentUser = auth.currentUser!!
         val caption = binding.captionEt.text.toString()
         storageRef = storageRef.child(System.currentTimeMillis().toString())
-
-        mImageUri?.let { imageUri ->
-            storageRef.putFile(imageUri).addOnCompleteListener { uploadTask ->
+        val progressBar = binding.progressBar
+        progressBar.visibility = View.VISIBLE
+        if (mImageUri != null) {
+            val uploadTask = storageRef.putFile(mImageUri!!)
+            uploadTask.addOnProgressListener { taskSnapshot ->
+                val progress = (100.0 * taskSnapshot.bytesTransferred / taskSnapshot.totalByteCount).toInt()
+                progressBar.progress = progress
+            }
+            uploadTask.addOnCompleteListener { uploadTask ->
+                progressBar.visibility = View.GONE
                 if (uploadTask.isSuccessful) {
                     storageRef.downloadUrl.addOnSuccessListener { uri ->
                         GlobalScope.launch(Dispatchers.Main) { // Switch to the main thread
@@ -79,24 +116,24 @@ class UploadFragment : Fragment() {
                                     val feed = FeedModel(currentUser.uid, uri, caption, userModel = userModel)
                                     uploadFeedToFirestore(currentUser.email!!, feed, "All")
                                     uploadFeedToFirestore(currentUser.email!!, feed, currentUser.email!!)
-                                    Toast.makeText(requireContext(), "Uploaded", Toast.LENGTH_LONG).show()
+                                    navigateToFeedFragment()
                                 } ?: run {
-                                    Toast.makeText(requireContext(), "User not found", Toast.LENGTH_LONG).show()
+                                    null
                                 }
                             } catch (e: Exception) {
-                                Toast.makeText(requireContext(), "Error: $e", Toast.LENGTH_LONG).show()
+                                Toast.makeText(requireActivity(), "Error: $e", Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 } else {
                     GlobalScope.launch(Dispatchers.Main) {
-                        Toast.makeText(requireContext(), "${uploadTask.exception}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(requireActivity(), "${uploadTask.exception}", Toast.LENGTH_LONG).show()
                     }
                 }
             }
-        } ?: run {
+        } else {
             GlobalScope.launch(Dispatchers.Main) {
-                Toast.makeText(requireContext(), "Image not selected", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireActivity(), "Image not selected", Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -115,7 +152,7 @@ class UploadFragment : Fragment() {
         try {
             firebaseReference.collection(collectionPath).add(feed).await()
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "Error uploading feed: $e", Toast.LENGTH_LONG).show()
+            Toast.makeText(requireActivity(), "Error uploading feed: $e", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -124,21 +161,80 @@ class UploadFragment : Fragment() {
         storageRef = FirebaseStorage.getInstance().reference.child("FeedImages")
         firebaseReference = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
+        dialog = buildDialog(requireContext(),"Uploading")
 
     }
     private fun openGallery(){
         val galleryIntent = Intent(Intent.ACTION_PICK,Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(galleryIntent,1)
-
     }
+    private fun openCamera() {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val imageFile = File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+
+        mImageUri = Uri.fromFile(imageFile)
+        val photoURI: Uri = FileProvider.getUriForFile(
+            requireContext(),
+            "com.example.friendsnetwork.fileprovider",
+            imageFile
+        )
+        takePicture.launch(photoURI)
+    }
+
+    private fun createImageFile(): File? {
+        return try {
+            val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+
+            // Ensure the storage directory exists
+            storageDir?.mkdirs()
+
+            val imageFile = File.createTempFile(
+                "JPEG_${timeStamp}_", /* prefix */
+                ".jpg", /* suffix */
+                storageDir /* directory */
+            )
+
+            currentPhotoPath = imageFile.absolutePath
+            Log.d("CurrentPath",currentPhotoPath.toString())
+            imageFile
+        } catch (e: IOException) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null) {
+
             mImageUri = data.data
+            Log.d("shubhamkumar",mImageUri.toString())
             binding.image.setImageURI(mImageUri)
         }
+        else if (requestCode == 2 && resultCode == Activity.RESULT_OK && data!=null) {
+            // Use the image URI directly
+            mImageUri = FileProvider.getUriForFile(
+                requireContext(),
+                "com.example.friends-network.provider",
+                File(currentPhotoPath!!)
+            )
+            Log.d("shubhamkumar",mImageUri.toString())
+            binding.image.setImageURI(mImageUri)
+        }
+
     }
+    private fun navigateToFeedFragment() {
+        // Find the parent fragment (HomePage)
+        val homePageFragment = parentFragment as HomePage
+        // Replace FeedFragment in HomePage
+        homePageFragment?.replaceFragment(FeedFragment())
+    }
+
+
 
 
 }

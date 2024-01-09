@@ -10,11 +10,14 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.adapter.StatusAdapter
 import com.example.friendsnetwork.databinding.FragmentHomePageBinding
@@ -56,8 +59,17 @@ class HomePage : Fragment() {
             binding.bottomNav.setBackgroundResource(R.color.white)
             binding.bottomNav.itemTextColor= ColorStateList.valueOf(Color.BLACK)
             binding.bottomNav.itemIconTintList = ColorStateList.valueOf(Color.BLACK)
+            binding.drawerNav.itemTextColor= ColorStateList.valueOf(Color.BLACK)
+            binding.drawerNav.itemIconTintList = ColorStateList.valueOf(Color.BLACK)
 
         }
+        else{
+            binding.drawerNav.itemTextColor= ColorStateList.valueOf(Color.WHITE)
+            binding.drawerNav.itemIconTintList = ColorStateList.valueOf(Color.WHITE)
+        }
+
+        handelDrawer(view)
+
         init(view)
         viewModel.mSelectedMenuId.observe(viewLifecycleOwner) {
             replaceFragment(it)
@@ -79,7 +91,6 @@ class HomePage : Fragment() {
             }
 
 
-
             it.isChecked = true
             true
         }
@@ -87,9 +98,28 @@ class HomePage : Fragment() {
 
     }
 
+    private fun handelDrawer(view: View) {
+        val header = binding.drawerNav.getHeaderView(0)
+        val headerName = header.findViewById<TextView>(R.id.header_name)
+        val headerDp = header.findViewById<ImageView>(R.id.header_dp)
+        viewModel.mUser.observe(viewLifecycleOwner){
+            Glide.with(view)
+                .load(it.userImage)
+                .centerCrop()
+                .into(headerDp)
+            headerName.text = it!!.name
+        }
 
+        val drawerMenu = binding.drawerNav.menu
+        val logout = drawerMenu.findItem(R.id.signout)
+        logout.setOnMenuItemClickListener{
+            auth.signOut()
+            findNavController().navigate(R.id.action_homePage_to_loginPage)
+            true
+        }
+    }
 
-    private fun replaceFragment(fragment: Fragment) {
+    fun replaceFragment(fragment: Fragment) {
         val fragmentTransaction = childFragmentManager.beginTransaction()
         fragmentTransaction.replace(R.id.fragments, fragment)
         fragmentTransaction.commit()

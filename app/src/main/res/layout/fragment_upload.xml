@@ -19,12 +19,45 @@
             android:id="@+id/image"
             android:layout_width="match_parent"
             android:layout_height="400dp"
+            android:background="@drawable/app_logo"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            android:background="@drawable/border_background"
-            android:src="@drawable/uploadsvg"
             android:layout_margin="10dp"/>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleHorizontal"
+            app:layout_constraintStart_toEndOf="@id/image"
+            app:layout_constraintEnd_toEndOf="@id/image"
+            app:layout_constraintTop_toBottomOf="@id/image"
+            app:layout_constraintBottom_toTopOf="@id/st"
+            />
+
+        <ImageView
+            android:id="@+id/camera"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/camera_svg"
+            app:layout_constraintBottom_toTopOf="@id/upload_btn"
+            app:layout_constraintStart_toStartOf="@id/upload_btn"
+            app:layout_constraintTop_toBottomOf="@id/st"
+            app:layout_constraintEnd_toStartOf="@id/gallery"
+
+            />
+        <ImageView
+            android:id="@+id/gallery"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:src="@drawable/gallery"
+            app:layout_constraintBottom_toTopOf="@id/upload_btn"
+            app:layout_constraintEnd_toEndOf="@id/upload_btn"
+            app:layout_constraintTop_toBottomOf="@id/st"
+            app:layout_constraintStart_toEndOf="@id/camera"
+            />
+
 
         <ScrollView
             android:id="@+id/st"
@@ -33,7 +66,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             android:layout_margin="10dp"
-            app:layout_constraintTop_toBottomOf="@+id/image">
+            app:layout_constraintTop_toBottomOf="@+id/progressBar"
+            >
 
         <EditText
             android:id="@+id/caption_et"
@@ -53,18 +87,11 @@
             android:backgroundTint="@color/black"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/st"
+            app:layout_constraintTop_toBottomOf="@+id/camera"
             android:text="Upload"
             android:textColor="@color/white"
             android:layout_margin="10dp"
             />
-
-
-
-
-
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

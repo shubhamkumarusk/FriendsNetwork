@@ -77,6 +77,7 @@ class LoginPage : Fragment() {
             binding.confirmPasswordEt.clearFocus()
             binding.setPasswordEt.clearFocus()
         }
+
         binding.googleSignInButton.setOnClickListener {
             signInWithGoogle()
         }
@@ -140,11 +141,10 @@ class LoginPage : Fragment() {
     private fun init(view: View) {
         auth = FirebaseAuth.getInstance()
         firebaseReference = FirebaseFirestore.getInstance()
-        binding.progressBar.visibility = View.GONE
+
         binding.viewBackground.visibility = View.GONE
         if(auth.currentUser!=null) {
             lifecycleScope.launch {
-                binding.progressBar.visibility = View.VISIBLE
                 binding.viewBackground.visibility = View.VISIBLE
                 binding.verificationBtn.visibility = View.GONE
                 val user = withContext(Dispatchers.IO) {
@@ -157,7 +157,7 @@ class LoginPage : Fragment() {
                 } else {
                     findNavController().navigate(R.id.action_loginPage_to_homePage)
                 }
-                binding.progressBar.visibility = View.GONE
+
                 binding.viewBackground.visibility = View.GONE
                 binding.verificationBtn.visibility = View.VISIBLE
             }

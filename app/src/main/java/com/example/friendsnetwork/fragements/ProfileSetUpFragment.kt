@@ -123,7 +123,6 @@ class ProfileSetUpFragment : Fragment() {
                                findNavController().navigate(R.id.action_profileSetUpFragment_to_homePage)
                            } else {
                                dialog.dismiss()
-
                            }
                        }
                }

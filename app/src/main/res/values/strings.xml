@@ -17,5 +17,6 @@
     <string name="enter_your_otp">Enter Your OTP</string>
     <string name="otp_msg">OTP has been sent to your e-mail address, please enter\nthe OTP to verify the email</string>
     <string name="caption">Caption</string>
+    <string name="shubham_kumar">Shubham Kumar</string>
 
 </resources>

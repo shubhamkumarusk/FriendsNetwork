@@ -2,10 +2,13 @@ package com.example.friendsnetwork.fragements
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.Intent
+import android.graphics.Camera
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -13,6 +16,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.registerForActivityResult
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
@@ -24,9 +30,14 @@ import com.example.friendsnetwork.databinding.FragmentProfileSetUpBinding
 import com.example.friendsnetwork.model.UserModel
 import com.example.friendsnetwork.viewmodel.FriendsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.userProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class ProfileSetUpFragment : Fragment() {
@@ -40,6 +51,17 @@ class ProfileSetUpFragment : Fragment() {
     private lateinit var dialog: ProgressDialog
     private  var isProfilePicChanged:Boolean = false
     var message = "Creating Profile"
+    private var takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()){success->
+        if(success){
+            Glide.with(requireContext())
+                .load(mImageUri)
+                .placeholder(R.drawable.profile)
+                .into(binding.profilePic)
+        }
+        else{
+
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -62,9 +84,30 @@ class ProfileSetUpFragment : Fragment() {
                 AddUsers()
             }
         binding.updateDp.setOnClickListener {
-            openGallery()
+            val options = arrayOf<CharSequence>("Camera","Gallery","Remove Profile Pic")
+            val builder = AlertDialog.Builder(requireContext())
+            builder.setTitle("Choose")
+            builder.setItems(options){_,item->
+                when{
+                    options[item]=="Camera"->{
+                        openCamera()
+                    }
+                    options[item]=="Gallery"->{
+                        openGallery()
+                    }
+                    options[item]=="Remove Profile Pic"->{
+                        mImageUri = null
+                        binding.profilePic.setBackgroundResource(R.drawable.profile)
+                    }
+                }
+
+            }
+            builder.show()
+
         }
     }
+
+
 
     private fun AddUsers() {
         val curruser = auth.currentUser!!
@@ -156,6 +199,19 @@ class ProfileSetUpFragment : Fragment() {
             binding.profilePic.setImageURI(mImageUri)
             isProfilePicChanged = true
         }
+    }
+    private fun openCamera() {
+        val timeStamp: String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val storageDir: File? = requireContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val imageFile = File.createTempFile("JPEG_${timeStamp}_", ".jpg", storageDir)
+
+        mImageUri = Uri.fromFile(imageFile)
+        val photoURI: Uri = FileProvider.getUriForFile(
+            requireContext(),
+            "com.example.friendsnetwork.fileprovider",
+            imageFile
+        )
+        takePicture.launch(photoURI)
     }
     private fun updateProfile(user: UserModel, view: View){
         Glide.with(view)

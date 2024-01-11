@@ -111,6 +111,9 @@
         tools:layout="@layout/fragment_profile_set_up" >
         <action
             android:id="@+id/action_profileSetUpFragment_to_homePage"
-            app:destination="@id/homePage" />
+            app:destination="@id/homePage"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/profileSetUpFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>

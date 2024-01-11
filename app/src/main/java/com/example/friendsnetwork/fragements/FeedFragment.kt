@@ -1,31 +1,38 @@
 package com.example.friendsnetwork.fragements
 
-import android.annotation.SuppressLint
-import android.net.Uri
+import android.content.res.Configuration
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.friendsnetwork.R
+import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
 import com.example.friendsnetwork.adapter.FeedAdapter
+import com.example.friendsnetwork.adapter.onClickHandel
 import com.example.friendsnetwork.databinding.FragmentFeedBinding
 import com.example.friendsnetwork.model.FeedModel
+import com.example.friendsnetwork.model.UserModel
 import com.example.friendsnetwork.viewmodel.FriendsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.withContext
 
 
-class FeedFragment : Fragment() {
+class FeedFragment : Fragment(), onClickHandel {
 
     private lateinit var binding:FragmentFeedBinding
     private lateinit var mAdapter:FeedAdapter
@@ -56,26 +63,64 @@ class FeedFragment : Fragment() {
     private fun init(view: View) {
         firebaseReference = FirebaseFirestore.getInstance()
         auth = FirebaseAuth.getInstance()
-        mAdapter = FeedAdapter()
+        mAdapter = FeedAdapter(this)
         binding.recyclerViewFeed.adapter = mAdapter
         binding.recyclerViewFeed.layoutManager = LinearLayoutManager(requireContext())
-        viewModel.mFeedList.observe(viewLifecycleOwner, Observer {
+        viewModel.mFeedList.observe(viewLifecycleOwner) {
             mAdapter.submitList(it)
-        })
-
-        viewModel.mUser.observe(viewLifecycleOwner){
-            viewModel.refresh()
         }
 
         if(auth.currentUser==null){
             findNavController().navigate(R.id.action_feedFragment_to_loginPage)
         }
 
+    }
 
+    override fun onLikeButtonClick(feed: FeedModel) {
+        GlobalScope.launch{
+            val currentFeed = getFeedModelFromFirestore(feed.feedId)
+            Log.d("shubhamKumarFeed", currentFeed.toString())
+            Log.d("feedIdLog", feed.feedId.toString())
+            val currentUser = viewModel.mUser.value!!
 
+            Log.d("shubhamKumarCurrentUser", currentUser.id.toString())
+            currentFeed?.let { nonNullFeed ->
+                val isLiked = nonNullFeed.liked_by.contains(currentUser.id)
+                if (isLiked) {
+                    nonNullFeed.liked_by.remove(currentUser.id)
+                } else {
+                    nonNullFeed.liked_by.add(currentUser.id)
+                }
+//                viewModel.updateFeedList(nonNullFeed)
+                Log.d("size",nonNullFeed.liked_by.size.toString())
+                uploadFeedToFirestore(nonNullFeed, "All")
+            }
+        }
     }
 
 
+    private suspend fun getFeedModelFromFirestore(feedId: String): FeedModel? {
+        return try {
+            withContext(Dispatchers.IO) {
+                firebaseReference.collection("All").document(feedId)
+                    .get().await().toObject(FeedModel::class.java)
+            }
+        } catch (e: Exception) {
+            Log.e("shubhamKumarFeed", "Error retrieving feed: $e")
+            null
+        }
+    }
+
+    private suspend fun uploadFeedToFirestore(feed: FeedModel, collectionPath: String) {
+        try {
+            withContext(Dispatchers.IO){
+                firebaseReference.collection(collectionPath).document(feed.feedId).set(feed).await()
+            }
+
+        } catch (e: Exception) {
+            Toast.makeText(requireActivity(), "Error uploading feed: $e", Toast.LENGTH_LONG).show()
+        }
+    }
 
 
 }

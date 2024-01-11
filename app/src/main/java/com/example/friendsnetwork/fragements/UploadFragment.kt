@@ -19,13 +19,18 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
+import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
 import com.example.friendsnetwork.R
 import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
 import com.example.friendsnetwork.buildDialog
 import com.example.friendsnetwork.databinding.FragmentUploadBinding
 import com.example.friendsnetwork.model.FeedModel
 import com.example.friendsnetwork.model.UserModel
+import com.example.friendsnetwork.viewmodel.FriendsViewModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -33,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -51,6 +57,8 @@ class UploadFragment : Fragment() {
     private lateinit var mCameraUri: Uri
     private lateinit var dialog:ProgressDialog
     private  var currentPhotoPath: String?=null
+    val currtime = System.currentTimeMillis().toString()
+    private val viewModel: FriendsViewModel by activityViewModels()
     private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             Log.d("shubhamkumar", mImageUri.toString())
@@ -96,7 +104,9 @@ class UploadFragment : Fragment() {
     private fun UploadFeed() {
         val currentUser = auth.currentUser!!
         val caption = binding.captionEt.text.toString()
-        storageRef = storageRef.child(System.currentTimeMillis().toString())
+
+        storageRef = storageRef.child(currtime)
+
         val progressBar = binding.progressBar
         progressBar.visibility = View.VISIBLE
         if (mImageUri != null) {
@@ -111,11 +121,11 @@ class UploadFragment : Fragment() {
                     storageRef.downloadUrl.addOnSuccessListener { uri ->
                         GlobalScope.launch(Dispatchers.Main) { // Switch to the main thread
                             try {
-                                val user = getUserModelFromFirestore(currentUser.email!!)
+                                val user = viewModel.mUser.value
                                 user?.let { userModel ->
-                                    val feed = FeedModel(currentUser.uid, uri, caption, userModel = userModel)
-                                    uploadFeedToFirestore(currentUser.email!!, feed, "All")
-                                    uploadFeedToFirestore(currentUser.email!!, feed, currentUser.email!!)
+                                    val feed = FeedModel(currentUser.uid+currtime, uri.toString(), caption, userModel = userModel)
+                                    uploadFeedToFirestore(currentUser, feed, "All")
+                                    uploadFeedToFirestore(currentUser, feed, currentUser.email!!)
                                     navigateToFeedFragment()
                                 } ?: run {
                                     null
@@ -141,16 +151,22 @@ class UploadFragment : Fragment() {
 
     private suspend fun getUserModelFromFirestore(userId: String): UserModel? {
         return try {
-            firebaseReference.collection(USER_ID_FIRESTOREPATH).document(userId)
-                .get().await().toObject(UserModel::class.java)
+            withContext(Dispatchers.IO){
+                firebaseReference.collection(USER_ID_FIRESTOREPATH).document(userId)
+                    .get().await().toObject(UserModel::class.java)
+            }
+
         } catch (e: Exception) {
             null
         }
     }
 
-    private suspend fun uploadFeedToFirestore(userId: String, feed: FeedModel, collectionPath: String) {
+    private suspend fun uploadFeedToFirestore(currentUser:FirebaseUser, feed: FeedModel, collectionPath: String) {
         try {
-            firebaseReference.collection(collectionPath).add(feed).await()
+            withContext(Dispatchers.IO) {
+                firebaseReference.collection(collectionPath).document(currentUser.uid + currtime)
+                    .set(feed).await()
+            }
         } catch (e: Exception) {
             Toast.makeText(requireActivity(), "Error uploading feed: $e", Toast.LENGTH_LONG).show()
         }
@@ -207,6 +223,7 @@ class UploadFragment : Fragment() {
 
 
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1 && resultCode == Activity.RESULT_OK && data != null) {

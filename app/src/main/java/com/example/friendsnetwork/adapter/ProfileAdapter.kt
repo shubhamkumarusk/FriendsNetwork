@@ -39,7 +39,7 @@ class ProfileAdapter: ListAdapter<FeedModel, ProfileAdapter.ProfileViewHolder>(D
         val DiffCallBack = object: DiffUtil.ItemCallback<FeedModel>(){
 
             override fun areItemsTheSame(oldItem: FeedModel, newItem: FeedModel): Boolean {
-                return oldItem.userId==newItem.userId
+                return oldItem.feedId==newItem.feedId
             }
 
             override fun areContentsTheSame(oldItem: FeedModel, newItem: FeedModel): Boolean {

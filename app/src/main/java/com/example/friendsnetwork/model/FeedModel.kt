@@ -6,10 +6,10 @@ import kotlinx.parcelize.Parcelize
 
 
 data class FeedModel(
-    val userId: String,
-    val image: Uri,
-    val caption: String,
-    val liked_by: List<UserModel> = ArrayList(),
-    val comments: List<CommentModel> = ArrayList(),
+    val feedId: String="",
+    val image:String="",
+    val caption: String="",
+    val liked_by: ArrayList<String> = ArrayList(),
+    val comments: ArrayList<CommentModel> = ArrayList(),
     val userModel: UserModel?=null
 )

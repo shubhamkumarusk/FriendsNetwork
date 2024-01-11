@@ -1,31 +1,26 @@
 package com.example.friendsnetwork.adapter
 
-import android.graphics.Color
 import android.net.Uri
-import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.net.toUri
-import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.friendsnetwork.R
-import com.example.friendsnetwork.USER_ID_FIRESTOREPATH
 import com.example.friendsnetwork.databinding.FeedListBinding
 import com.example.friendsnetwork.model.FeedModel
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.friendsnetwork.viewmodel.FriendsViewModel
+import com.google.firebase.auth.FirebaseAuth
 
-class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack) {
-
-
-    class FeedViewHolder(private val binding: FeedListBinding ):RecyclerView.ViewHolder(binding.root){
+class FeedAdapter(private val mlistner:onClickHandel) :ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack) {
+    class FeedViewHolder(private val binding: FeedListBinding,val listner: onClickHandel):RecyclerView.ViewHolder(binding.root){
         private val caption = binding.captionFeed
-        private val readmore = binding.readmore
-
+        private val likedNumer = binding.likeNum
         fun bind(feed:FeedModel){
             val userModel = feed.userModel
             if (userModel != null) {
@@ -33,12 +28,12 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
                 Glide.with(itemView.context)
                     .load(Uri.parse(userModel.userImage))
                     .centerCrop()
-                    .placeholder(R.color.black)
+                    .placeholder(R.drawable.profile)
                     .into(binding.dpImage)
 
 
             }
-            binding.likeNum.text = feed.liked_by.size.toString()
+            likedNumer.text = feed.liked_by.size.toString()
             binding.captionFeed.text = feed.caption
             binding.imageFeed.let {
                 Glide.with(itemView.context)
@@ -48,27 +43,29 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
                     .error(R.drawable.connection_error)
                     .into(binding.imageFeed)
             }
-            binding.readmore.setOnClickListener{
+            caption.setOnClickListener{
                 readMore()
             }
-
-
-            Log.d("imageUri", userModel!!.userImage)
-            Log.d("name",userModel.name)
-
-
+            binding.likeBtn.setOnClickListener {
+               listner.onLikeButtonClick(feed)
+            }
+            val liked = feed.liked_by.contains(FirebaseAuth.getInstance().currentUser!!.email)
+            if(liked){
+                binding.likeBtn.setImageDrawable(ContextCompat.getDrawable(binding.likeBtn.context,R.drawable.like_btn))
+            }else{
+                binding.likeBtn.setImageDrawable(ContextCompat.getDrawable(binding.likeBtn.context,R.drawable.liked_btn_outlined))
+            }
 
 
         }
 
+
         private fun readMore(){
             if(caption.maxLines==2){
                 caption.maxLines = Int.MAX_VALUE
-                readmore.text = "Show Less"
             }
             else{
                 caption.maxLines =2
-                readmore.text = "...Read more"
             }
         }
 
@@ -86,7 +83,7 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
         val DiffCallBack = object:DiffUtil.ItemCallback<FeedModel>(){
 
             override fun areItemsTheSame(oldItem: FeedModel, newItem: FeedModel): Boolean {
-                return oldItem.userId==newItem.userId
+                return oldItem.feedId==newItem.feedId
             }
 
 
@@ -100,7 +97,8 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FeedViewHolder {
         return FeedViewHolder(
-            FeedListBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+            FeedListBinding.inflate(LayoutInflater.from(parent.context), parent, false),
+            mlistner
         )
     }
 
@@ -110,4 +108,10 @@ class FeedAdapter:ListAdapter<FeedModel,FeedAdapter.FeedViewHolder>(DiffCallBack
         holder.bind(curr)
     }
 
+
+
+}
+
+interface onClickHandel{
+    fun onLikeButtonClick(feed:FeedModel)
 }

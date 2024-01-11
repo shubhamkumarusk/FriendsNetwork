@@ -18,5 +18,17 @@
     <string name="otp_msg">OTP has been sent to your e-mail address, please enter\nthe OTP to verify the email</string>
     <string name="caption">Caption</string>
     <string name="shubham_kumar">Shubham Kumar</string>
+    <string name="randomtext">Certainly Here\'s a random sentence for each line:
+
+The sun dipped below the horizon, casting a warm glow across the tranquil sea.
+In the bustling city, neon lights flickered, creating a vibrant tapestry of colors.
+A gentle breeze whispered through the ancient oak trees, rustling their leaves in harmony.
+The aroma of freshly brewed coffee wafted through the air, enticing passersby on the busy street.
+As night fell, a symphony of crickets and frogs serenaded the moonlit meadow.
+Lost in thought, she gazed at the stars, each one telling a story of the cosmos.
+The old bookstore exuded a nostalgic scent of worn pages and literary treasures.
+Laughter echoed in the courtyard as friends gathered around a crackling bonfire.
+A solitary cat prowled the narrow alley, its eyes gleaming in the dim light.
+With a flick of the paintbrush, the artist brought life to the blank canvas, capturing the essence of a fleeting moment.</string>
 
 </resources>

@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class FriendsViewModel:ViewModel() {
     val mSelectedMenuId=MutableLiveData<Fragment>()
@@ -56,17 +57,18 @@ class FriendsViewModel:ViewModel() {
                     // Handle error
                     return@addSnapshotListener
                 }
-                GlobalScope.launch{
+                viewModelScope.launch{
                 if (snapshot != null) {
                     val FeedList = mutableListOf<FeedModel>()
                     for (document in snapshot.documents) {
-                        val userId = document.getString("userId")!!
-                        val image = Uri.parse(document.getString("image")!!)
+                        val userId = document.getString("feedId")!!
+                        val image = document.getString("image")!!
                         val caption = document.getString("caption")!!
                         val user_Id= document.getField<UserModel>("userModel")!!.id
                         val user = getUserModelFromFirestore(user_Id)
+                        val liked = document.get("liked_by") as ArrayList<String>
 
-                        val feed = FeedModel(userId, image, caption, userModel = user)
+                        val feed = FeedModel(userId, image, caption, userModel = user, liked_by = liked)
                         FeedList.add(feed)
 
                     }
@@ -93,8 +95,8 @@ class FriendsViewModel:ViewModel() {
                 if (snapshot != null) {
                     val FeedList = mutableListOf<FeedModel>()
                         for (document in snapshot.documents) {
-                            val userId = document.getString("userId")!!
-                            val image = Uri.parse(document.getString("image")!!)
+                            val userId = document.getString("feedId")!!
+                            val image = document.getString("image")!!
                             val caption = document.getString("caption")!!
 
                             val feed = FeedModel(userId, image, caption)
@@ -107,17 +109,27 @@ class FriendsViewModel:ViewModel() {
 
     private suspend fun getUserModelFromFirestore(userId: String): UserModel? {
         return try {
-            mfirebaseReference.collection(USER_ID_FIRESTOREPATH).document(userId)
-                .get().await().toObject(UserModel::class.java)
+            withContext(Dispatchers.IO){
+                mfirebaseReference.collection(USER_ID_FIRESTOREPATH).document(userId)
+                    .get().await().toObject(UserModel::class.java)
+            }
+
         } catch (e: Exception) {
             null
         }
     }
 
-    fun updateProfile(user:UserModel){
-        val data = HashMap<String, Any>()
+    fun updateFeedList(updatedFeed: FeedModel) {
+        val currentFeedList = mFeedList.value.orEmpty().toMutableList()
 
+        val index = currentFeedList.indexOfFirst { it.feedId == updatedFeed.feedId }
+
+        if (index != -1) {
+            currentFeedList[index] = updatedFeed
+            mFeedList.postValue(currentFeedList)
+        }
     }
+
 
 
 
